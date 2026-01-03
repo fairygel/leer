@@ -1,9 +1,11 @@
 import { MongoClient, Db } from 'mongodb';
+import { Service } from 'typedi';
 
+@Service()
 export class Database {
 	private static db: Db;
 
-	static async connectDB(): Promise<Db> {
+	async connectDB(): Promise<Db> {
 		console.log('\x1b[92m[mongo] Connecting to Database...\x1b[0m');
 
 		const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
@@ -17,7 +19,7 @@ export class Database {
 		return Database.db;
 	}
 
-	static getDB(): Db {
+	getDB(): Db {
 		return Database.db;
 	}
 }

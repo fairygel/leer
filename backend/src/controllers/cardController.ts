@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { Card, CardStatus } from '../models/Card';
 import { CardRepository } from '../repository/cardRepository';
+import { Service } from 'typedi';
 
+@Service()
 export class CardController {
 	private repo: CardRepository;
 
@@ -28,8 +30,7 @@ export class CardController {
 	}
 
 	async createCard(req: Request, res: Response) {
-		const { setId } = req.params;
-		const { question, answer, status } = req.body;
+		const { setId, question, answer, status } = req.body;
 
 		if (!setId) {
 			return res.status(400).json({ error: 'setId is required' });
@@ -72,9 +73,9 @@ export class CardController {
 	}
 
 	async deleteCard(req: Request, res: Response) {
-		const { cardId } = req.params;
+		const { id } = req.params;
 
-		const result = await this.repo.deleteCard(cardId);
+		const result = await this.repo.deleteCard(id);
 
 		if (!result.deletedCount) {
 			return res.status(404).json({ error: 'Card not found' });

@@ -3,6 +3,7 @@
 .prettierrc
 .vscode
 .env
+.idea
 
 dist
 node_modules

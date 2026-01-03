@@ -1,15 +1,17 @@
-import { ObjectId, Db } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { CardSet } from '../models/CardSet';
+import { Service } from 'typedi';
+import { Database } from '../config/database';
 
+@Service()
 export class SetRepository {
-    private db: Db;
-
-    constructor(db: Db) {
-        this.db = db;
-    }
+    constructor (
+        private database: Database
+    ) {}
 
     private collection() {
-        return this.db.collection('sets');
+        const db = this.database.getDB();
+        return db.collection('sets');
     }
 
     async getAllSets() {

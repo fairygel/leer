@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { CardSet } from '../models/CardSet';
 import { SetRepository } from '../repository/setRepository';
+import { Service } from 'typedi';
 
+@Service()
 export class SetController {
 	private repo: SetRepository;
 

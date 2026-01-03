@@ -1,17 +1,34 @@
 import express from 'express';
-import { Container } from '../di/container';
-import createCardRoutes from './cardRoutes';
+import { Service } from 'typedi';
+import { SetController } from '../controllers/setController';
+import { CardRouter } from './cardRoutes';
 
-export default function createSetRoutes(container: Container) {
-	const router = express.Router();
+@Service()
+export class SetRouter {
+	constructor(
+        private setController: SetController,
+        private cardRouter: CardRouter
+    ) {}
 
-	router.get('/', container.setController.indexSet.bind(container.setController));
-	router.get('/:setId', container.setController.readSet.bind(container.setController));
-	router.post('/', container.setController.createSet.bind(container.setController));
-	router.patch('/:setId', container.setController.updateSet.bind(container.setController));
-	router.delete('/:setId', container.setController.deleteSet.bind(container.setController));
+	createSetRoutes() {
+		const router = express.Router();
 
-	router.use('/:setId/flashcards', createCardRoutes(container));
+		router.get('/', this.setController.indexSet.bind(this.setController));
+		router.get(
+			'/:setId',
+			this.setController.readSet.bind(this.setController)
+		);
+		router.post('/', this.setController.createSet.bind(this.setController));
+		router.patch(
+			'/:setId',
+			this.setController.updateSet.bind(this.setController)
+		);
+		router.delete(
+			'/:setId',
+			this.setController.deleteSet.bind(this.setController)
+		);
+		router.use('/:setId/flashcards', this.cardRouter.createCardRoutes());
 
-	return router;
+		return router;
+	}
 }
