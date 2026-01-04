@@ -51,8 +51,8 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no masotto@172.26.253.138 "
                             cd /home/masotto/leer && \
                             docker pull ${DOCKER_REGISTRY}/leer:latest && \
-                            docker-compose down && \
-                            docker-compose up -d
+                            docker compose down && \
+                            docker compose up -d
                         "
                     '''
                 }
