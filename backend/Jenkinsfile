@@ -48,7 +48,7 @@ pipeline {
                 echo 'deploying to local server...'
                 script {
                     sh '''
-                        cd /home/fairygel/leer
+                        cd /home/masotto/leer
                         docker pull ${DOCKER_REGISTRY}/leer:latest
                         docker-compose down
                         docker-compose up -d
