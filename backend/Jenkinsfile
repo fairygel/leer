@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
+
+    environment {
+        DOCKER_IMAGE = "leer:${BUILD_NUMBER}"
+        DOCKER_REGISTRY = "fairygel"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'fetching github repo...'
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'building docker image...'
+                script {
+                    sh 'cd ${WORKSPACE}/backend && docker build -t ${DOCKER_IMAGE} .'
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                echo 'pushing docker image to Docker Hub...'
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker_hub_credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker tag ${DOCKER_IMAGE} ${DOCKER_REGISTRY}/leer:latest
+                            docker push ${DOCKER_REGISTRY}/leer:latest
+                            docker logout
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'deploying to local server...'
+                script {
+                    sh '''
+                        cd /home/fairygel/leer
+                        docker pull ${DOCKER_REGISTRY}/leer:latest
+                        docker-compose down
+                        docker-compose up -d
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo '✅ Pipeline success!'
+        }
+        failure {
+            echo '❌ Pipeline exited with error!'
+        }
+    }
+}
