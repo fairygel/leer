@@ -1,24 +1,28 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { Stack, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { storage } from '@/services/storage';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+	const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+	useEffect(() => {
+		const checkAuth = async () => {
+			const token = await storage.getToken();
+			setIsLoggedIn(!!token);
+		};
+
+		checkAuth().catch(console.error);
+	}, []);
+
+	if (isLoggedIn === null) return null;
+
+	return (
+		<Stack
+			screenOptions={{
+				headerShown: false,
+			}}>
+			{isLoggedIn ?
+				(<Stack.Screen name="(app)" />) :
+				(<Stack.Screen name="(auth)" />)}
+		</Stack>);
 }
