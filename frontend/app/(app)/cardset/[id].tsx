@@ -43,6 +43,7 @@ async function addCardToSet(id: string, question: string, answer: string): Promi
 		createdAt: new Date(),
 	};
 }
+
 export default function CardSetDetail() {
 	const { id, data } = useLocalSearchParams<{ id: string, data: string }>();
 	const router = useRouter();
@@ -50,6 +51,13 @@ export default function CardSetDetail() {
 
 	const [item, setItem] = useState<CardSet>();
 	const [cards, setCards] = useState<FlashCard[]>([]);
+
+	const [learnCardCount, setLearnCardCount] = useState<number>(0);
+	const [unknownCardCount, setUnknownCardCount] = useState<number>(0);
+	const [totalCardCount, setTotalCardCount] = useState<number>(0);
+
+	const [knownCardPercentage, setKnownCardPercentage] = useState<number>(0);
+
 	const [question, setQuestion] = useState('');
 	const [answer, setAnswer] = useState('');
 
@@ -63,6 +71,36 @@ export default function CardSetDetail() {
 		loadSetData(id, data).then(setItem);
 		getCardsForSet(id).then(setCards);
 	}, [id]);
+
+	useEffect(() => {
+		if (cards.length === 0) {
+			setKnownCardPercentage(0);
+			setLearnCardCount(0);
+			setUnknownCardCount(0);
+			setTotalCardCount(0);
+			return;
+		}
+
+		const learnCount = cards.filter(c => c.status === CardStatus.LEARN).length;
+		const total = cards.length;
+
+		setLearnCardCount(learnCount);
+		setTotalCardCount(total);
+		setUnknownCardCount(total - learnCount);
+
+		const rawPercentage = (learnCount / total) * 100;
+
+		let finalPercentage;
+		if (rawPercentage <= 0) {
+			finalPercentage = 0;
+		} else if (rawPercentage >= 100) {
+			finalPercentage = 100;
+		} else {
+			finalPercentage = Math.max(35, Math.min(72, Math.round(rawPercentage)));
+		}
+
+		setKnownCardPercentage(finalPercentage);
+	}, [cards]);
 
 	const handleAddCard = async () => {
 		if (!question.trim() || !answer.trim()) {
@@ -83,12 +121,11 @@ export default function CardSetDetail() {
 		if (item) {
 			setItem({ ...item, name, description });
 		}
-	}
+	};
 
 	const deleteItem = async (cardId: string) => {
 		try {
 			await CardService.delete(id, cardId);
-			setCards(cards.filter(c => c._id !== cardId));
 		} catch (error) {
 			console.error('Error deleting card:', error);
 		}
@@ -138,6 +175,46 @@ export default function CardSetDetail() {
 				}}>
 					{item?.description}
 				</Text>
+				<View style={{marginTop: 24, marginBottom: 12, width: '100%'}}>
+					<View style={{
+						height: 36,
+						backgroundColor: Colors.secondary,
+						borderRadius: 12,
+						borderColor: Colors.primary,
+						borderWidth: 2,
+						overflow: 'hidden',
+						justifyContent: 'center'
+					}}>
+						<View style={{
+							height: '100%',
+							backgroundColor: Colors.primary,
+							width: `${knownCardPercentage}%`,
+							marginLeft: -2,
+							justifyContent: 'space-between',
+							alignItems: 'center'
+						}}>
+						</View>
+						<View style={{
+							position: 'absolute',
+							justifyContent: 'space-between',
+							alignItems: 'center',
+							flexDirection: 'row',
+							width: '100%',
+							paddingHorizontal: 12
+						}}>
+							<Text style={{
+								color: knownCardPercentage === 0 ? Colors.primary : Colors.secondary,
+								fontWeight: 'bold',
+								fontSize: FONT_SIZES.small
+							}}>{learnCardCount} Known</Text>
+							<Text style={{
+								color: knownCardPercentage === 100 ? Colors.secondary : Colors.primary,
+								fontWeight: 'bold',
+								fontSize: FONT_SIZES.small
+							}}>{unknownCardCount} Left</Text>
+						</View>
+					</View>
+				</View>
 				<View style={{
 					paddingHorizontal: 12,
 					paddingVertical: 12,
@@ -161,61 +238,56 @@ export default function CardSetDetail() {
 					}}>New Card</Text>
 				</View>
 
-			<View style={{
-				borderStyle: 'solid',
-				borderWidth: 2,
-				borderRadius: 24,
-				borderColor: Colors.primary,
-				padding: 12
-			}}>
-				<TextInput
-					style={{
-						borderStyle: 'solid',
-						borderWidth: 2,
-						borderRadius: 12,
-						borderColor: Colors.primary,
-						padding: 12,
-						color: Colors.primaryLighten,
-						fontSize: FONT_SIZES.small,
-						marginTop: 4,
-						marginBottom: 12,
-						width: '100%',
-					}}
-					placeholder="Word"
-					value={question}
-					onChangeText={setQuestion}
-					placeholderTextColor={Colors.primaryLighten}
-				/>
-				<TextInput
-					style={{
-						borderStyle: 'solid',
-						borderWidth: 2,
-						borderRadius: 12,
-						borderColor: Colors.primary,
-						padding: 12,
-						color: Colors.primaryLighten,
-						fontSize: FONT_SIZES.small,
-						marginTop: 4,
-						marginBottom: 12,
-						width: '100%',
-					}}
-					placeholder="Definition"
-					value={answer}
-					onChangeText={setAnswer}
-					placeholderTextColor={Colors.primaryLighten}
-				/>
-				<Pressable
-					style={{
+				<View style={{
+					borderWidth: 2,
+					borderColor: Colors.primary,
+					borderRadius: 12,
+					padding: 16,
+					marginBottom: 12,
+					backgroundColor: Colors.secondary,
+				}}>
+					<TextInput
+						style={{
+							fontSize: FONT_SIZES.body,
+							color: Colors.primary,
+							fontWeight: 'bold',
+							marginBottom: 8,
+						}}
+						placeholder="Question"
+						value={question}
+						onChangeText={setQuestion}
+						placeholderTextColor={Colors.primaryLighten}
+					/>
+					<View style={{
+						height: 1,
 						backgroundColor: Colors.primary,
-						borderRadius: 12,
-						padding: 12,
-					}}
-					onPress={handleAddCard}
-				>
-					<Text
-						style={{ color: Colors.secondary, alignSelf: 'center', fontSize: FONT_SIZES.small }}>Add Card</Text>
-				</Pressable>
-			</View>
+						opacity: 0.2,
+						marginVertical: 8,
+					}} />
+					<TextInput
+						style={{
+							fontSize: FONT_SIZES.body,
+							color: Colors.primaryLighten,
+							marginBottom: 12,
+						}}
+						placeholder="Answer"
+						value={answer}
+						onChangeText={setAnswer}
+						placeholderTextColor={Colors.primaryLighten}
+					/>
+					<Pressable
+						style={{
+							backgroundColor: Colors.primary,
+							borderRadius: 12,
+							padding: 12,
+						}}
+						onPress={handleAddCard}
+					>
+						<Text
+							style={{ color: Colors.secondary, alignSelf: 'center', fontSize: FONT_SIZES.small }}>Add
+							Card</Text>
+					</Pressable>
+				</View>
 
 				<View style={{
 					paddingHorizontal: 12,
@@ -244,15 +316,18 @@ export default function CardSetDetail() {
 					<View
 						key={item._id}
 						style={{
-							borderStyle: 'solid',
 							borderWidth: 2,
-							borderRadius: 24,
 							borderColor: Colors.primary,
-							padding: 12,
-							marginBottom: 12
+							borderRadius: 12,
+							padding: 16,
+							marginBottom: 12,
+							backgroundColor: Colors.secondary,
 						}}
 					>
-						<Pressable onPress={() => {deleteItem(item._id)}} style={{
+						<Pressable onPress={() => {
+							deleteItem(item._id).then(() =>
+							{setCards(cards.filter(c => c._id !== item._id));});
+						}} style={{
 							position: 'absolute',
 							right: -14,
 							top: -14,
@@ -263,36 +338,22 @@ export default function CardSetDetail() {
 							backgroundColor: Colors.secondary,
 							padding: 4,
 						}}><Entypo name="cross" size={24} color={Colors.primary} /></Pressable>
-						<TextInput
-							style={{
-								borderStyle: 'solid',
-								borderWidth: 2,
-								borderRadius: 12,
-								borderColor: Colors.primary,
-								padding: 12,
-								color: Colors.primaryLighten,
-								fontSize: FONT_SIZES.small,
-								marginTop: 4,
-								width: '100%',
-							}}
-							value={item.question}
-							editable={false}
-						/>
-						<TextInput
-							style={{
-								borderStyle: 'solid',
-								borderWidth: 2,
-								borderRadius: 12,
-								borderColor: Colors.primary,
-								padding: 12,
-								color: Colors.primaryLighten,
-								fontSize: FONT_SIZES.small,
-								marginTop: 12,
-								width: '100%',
-							}}
-							value={item.answer}
-							editable={false}
-						/>
+						<Text style={{
+							fontSize: FONT_SIZES.body,
+							color: Colors.primary,
+							fontWeight: 'bold',
+							marginBottom: 8,
+						}}>{item.question}</Text>
+						<View style={{
+							height: 1,
+							backgroundColor: Colors.primary,
+							opacity: 0.2,
+							marginVertical: 8,
+						}} />
+						<Text style={{
+							fontSize: FONT_SIZES.body,
+							color: Colors.primaryLighten,
+						}}>{item.answer}</Text>
 					</View>
 				))}
 			</ScrollView>
@@ -305,8 +366,11 @@ export default function CardSetDetail() {
 				right: 24,
 				borderRadius: 12,
 				padding: 12,
-				marginHorizontal: 48
-			}}>
+				marginHorizontal: 48,
+			}} onPress={() => router.push({
+				pathname: '/cardset/learn',
+				params: { setId: id },
+			})}>
 				<Text style={{ color: Colors.secondary, alignSelf: 'center', fontSize: FONT_SIZES.body }}>Learn</Text>
 			</Pressable>
 		</View>
