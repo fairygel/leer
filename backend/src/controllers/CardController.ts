@@ -64,9 +64,9 @@ export class CardController {
 
 	async deleteCard(req: Request, res: Response) {
 		try {
-			const { id } = req.params;
+			const { cardId } = req.params;
 
-			const result = await this.cardService.deleteCard(id);
+			const result = await this.cardService.deleteCard(cardId);
 
 			if (!result.deletedCount) {
 				return res.status(404).json({ error: 'Card not found' });
