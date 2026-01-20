@@ -48,8 +48,8 @@ pipeline {
                 echo 'deploying via ssh...'
                 sshagent(['ssh_key_credentials']) {
                     sh '''
-                        ssh -o StrictHostKeyChecking=no masotto@172.26.253.138 "
-                            cd /home/masotto/leer && \
+                        ssh -o StrictHostKeyChecking=no fairygel@62.171.134.206 "
+                            cd /home/fairygel/leer && \
                             docker pull ${DOCKER_REGISTRY}/leer:latest && \
                             docker compose down && \
                             docker compose up -d
