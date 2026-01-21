@@ -44,6 +44,10 @@ async function addCardToSet(id: string, question: string, answer: string): Promi
 	};
 }
 
+async function updateItem(item: FlashCard) {
+	return CardService.update(item.setId, item._id, item);
+}
+
 export default function CardSetDetail() {
 	const { id, data } = useLocalSearchParams<{ id: string, data: string }>();
 	const router = useRouter();
@@ -54,7 +58,6 @@ export default function CardSetDetail() {
 
 	const [learnCardCount, setLearnCardCount] = useState<number>(0);
 	const [unknownCardCount, setUnknownCardCount] = useState<number>(0);
-	const [totalCardCount, setTotalCardCount] = useState<number>(0);
 
 	const [knownCardPercentage, setKnownCardPercentage] = useState<number>(0);
 
@@ -77,7 +80,6 @@ export default function CardSetDetail() {
 			setKnownCardPercentage(0);
 			setLearnCardCount(0);
 			setUnknownCardCount(0);
-			setTotalCardCount(0);
 			return;
 		}
 
@@ -85,7 +87,6 @@ export default function CardSetDetail() {
 		const total = cards.length;
 
 		setLearnCardCount(learnCount);
-		setTotalCardCount(total);
 		setUnknownCardCount(total - learnCount);
 
 		const rawPercentage = (learnCount / total) * 100;
@@ -319,7 +320,8 @@ export default function CardSetDetail() {
 							borderWidth: 2,
 							borderColor: Colors.primary,
 							borderRadius: 12,
-							padding: 16,
+							paddingHorizontal: 16,
+							paddingVertical: 6,
 							marginBottom: 12,
 							backgroundColor: Colors.secondary,
 						}}
@@ -338,22 +340,38 @@ export default function CardSetDetail() {
 							backgroundColor: Colors.secondary,
 							padding: 4,
 						}}><Entypo name="cross" size={24} color={Colors.primary} /></Pressable>
-						<Text style={{
-							fontSize: FONT_SIZES.body,
-							color: Colors.primary,
-							fontWeight: 'bold',
-							marginBottom: 8,
-						}}>{item.question}</Text>
+						<TextInput
+							value={item.question}
+							onChangeText={(text) => {
+								setCards((prev) => prev.map((c) => (c._id === item._id ? { ...c, question: text } : c)));
+							}}
+							onEndEditing={() => updateItem(item)}
+							style={{
+								fontSize: FONT_SIZES.body,
+								color: Colors.primary,
+								fontWeight: 'bold',
+								marginBottom: 6,
+								padding: 6,
+							}}
+						/>
 						<View style={{
 							height: 1,
 							backgroundColor: Colors.primary,
 							opacity: 0.2,
-							marginVertical: 8,
 						}} />
-						<Text style={{
-							fontSize: FONT_SIZES.body,
-							color: Colors.primaryLighten,
-						}}>{item.answer}</Text>
+						<TextInput
+							value={item.answer}
+							onChangeText={(text) => {
+								setCards((prev) => prev.map((c) => (c._id === item._id ? { ...c, answer: text } : c)));
+							}}
+							onEndEditing={() => updateItem(item)}
+							style={{
+								fontSize: FONT_SIZES.body,
+								color: Colors.primaryLighten,
+								padding: 6,
+								marginTop: 6,
+							}}
+						/>
 					</View>
 				))}
 			</ScrollView>

@@ -40,7 +40,7 @@ export class CardService {
 			throw new Error('Invalid status');
 		}
 
-		const card = new Card(question, answer, status);
+		const card: Partial<Card> = { ... (question ? { question } : {}), ... (answer ? { answer } : {}), ... (status ? { status } : {}) };
 		return await this.cardRepository.updateCard(cardId, card);
 	}
 

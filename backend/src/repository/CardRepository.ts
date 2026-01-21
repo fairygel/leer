@@ -27,7 +27,7 @@ export class CardRepository {
         return await this.collection().insertOne(card);
     }
 
-    async updateCard(id: string, card: Card) {
+    async updateCard(id: string, card: Partial<Card>) {
         return await this.collection().updateOne({ _id: new ObjectId(id) }, { $set: card });
     }
 
