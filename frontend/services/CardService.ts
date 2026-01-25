@@ -28,9 +28,9 @@ export const CardService = {
 		return await response.json();
 	},
 
-	async update(setId: string, cardId: string, data: Partial<FlashCard>): Promise<any> {
-		const response = await fetcher(`/sets/${setId}/flashcards/${cardId}`, 'PATCH', {
-			body: JSON.stringify(data),
+	async update(card: Partial<FlashCard>): Promise<any> {
+		const response = await fetcher(`/sets/${card.setId}/flashcards/${card._id}`, 'PATCH', {
+			body: JSON.stringify(card),
 		});
 		if (!response.ok) {
 			throw new Error('Failed to update card');

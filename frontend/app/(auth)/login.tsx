@@ -5,15 +5,28 @@ import { Link, router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { storage } from '@/services/storage';
-import { AuthService } from '@/services/AuthService';
-import { FONTS } from '@/constants/Fonts';
+import { fetcher } from '@/services/fetcher';
 
 async function makeRequest(name: string, password: string) {
-	const jsonResponse = await AuthService.login({
-		username: name,
-		password: password,
-	});
-	await storage.saveToken(jsonResponse.token);
+	try {
+		const response = await fetcher('/auth/login', 'post', {
+			body: JSON.stringify({
+				username: name,
+				password: password,
+			}),
+		});
+
+		if (response.status !== 200) {
+			console.log("Can't register");
+			console.log(await response.json());
+			return
+		}
+		const jsonResponse = await response.json();
+		await storage.saveToken(jsonResponse.token);
+
+	} catch (e) {
+		console.log(e);
+	}
 }
 
 export default function Login() {
@@ -56,8 +69,8 @@ export default function Login() {
 					<Text style={{
 						color: Colors.primary,
 						fontSize: FONT_SIZES.title,
-						fontFamily: FONTS.heading,
-					}}>Welcome!</Text>
+						fontFamily: 'Georgia',
+					}}>Welcume!</Text>
 				</View>
 
 				<View style={{ justifyContent: 'flex-start', paddingTop: 24 }}>
