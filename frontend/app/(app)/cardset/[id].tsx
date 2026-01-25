@@ -1,11 +1,10 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { View, Text, Pressable, TextInput, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '@/constants/Colors';
 import { FONT_SIZES } from '@/constants/Sizes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { CardSet, FlashCard } from '@/types';
 import { SetService } from '@/services/SetService';
 import { CardService } from '@/services/CardService';
@@ -44,11 +43,9 @@ async function addCardToSet(id: string, question: string, answer: string): Promi
 	};
 }
 
-async function updateItem(item: FlashCard) {
-	return CardService.update(item.setId, item._id, item);
-}
-
 export default function CardSetDetail() {
+	const cardsToUpdateRef = useRef<Record<string, FlashCard>>({});
+	const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	const { id, data } = useLocalSearchParams<{ id: string, data: string }>();
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
@@ -66,14 +63,37 @@ export default function CardSetDetail() {
 
 	const [isEditModalVisible, setEditModalVisible] = useState(false);
 
+	const queueUpdate = useCallback((card: FlashCard) => {
+		cardsToUpdateRef.current[card._id] = card;
+
+		if (debounceTimerRef.current) {
+			clearTimeout(debounceTimerRef.current);
+		}
+
+		debounceTimerRef.current = setTimeout(async () => {
+			const cardsToSave = Object.values(cardsToUpdateRef.current);
+			cardsToUpdateRef.current = {};
+
+			for (const card of cardsToSave) {
+				try {
+					await CardService.update(card);
+				} catch (error) {
+					console.error('Failed to update card', card._id, error);
+				}
+			}
+		}, 1500);
+	}, []);
+
 	if (!id) {
 		router.replace('/(app)');
 	}
 
-	useEffect(() => {
-		loadSetData(id, data).then(setItem);
-		getCardsForSet(id).then(setCards);
-	}, [id]);
+	useFocusEffect(
+		useCallback(() => {
+			loadSetData(id, data).then(setItem);
+			getCardsForSet(id).then(setCards);
+		}, [id, data])
+	);
 
 	useEffect(() => {
 		if (cards.length === 0) {
@@ -343,9 +363,10 @@ export default function CardSetDetail() {
 						<TextInput
 							value={item.question}
 							onChangeText={(text) => {
-								setCards((prev) => prev.map((c) => (c._id === item._id ? { ...c, question: text } : c)));
+								const updatedCard = { ...item, question: text };
+								setCards((prev) => prev.map((c) => (c._id === item._id ? updatedCard : c)));
+								queueUpdate(updatedCard);
 							}}
-							onEndEditing={() => updateItem(item)}
 							style={{
 								fontSize: FONT_SIZES.body,
 								color: Colors.primary,
@@ -362,9 +383,10 @@ export default function CardSetDetail() {
 						<TextInput
 							value={item.answer}
 							onChangeText={(text) => {
-								setCards((prev) => prev.map((c) => (c._id === item._id ? { ...c, answer: text } : c)));
+								const updatedCard = { ...item, answer: text };
+								setCards((prev) => prev.map((c) => (c._id === item._id ? updatedCard : c)));
+								queueUpdate(updatedCard);
 							}}
-							onEndEditing={() => updateItem(item)}
 							style={{
 								fontSize: FONT_SIZES.body,
 								color: Colors.primaryLighten,

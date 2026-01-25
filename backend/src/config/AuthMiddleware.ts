@@ -25,8 +25,11 @@ export class AuthMiddleware {
 			return;
 		}
 
-		req.user = this.jwt.verifyToken(token) as { userId: string; username: string };
-
-		next();
+		try {
+			req.user = this.jwt.verifyToken(token) as { userId: string; username: string };
+			next();
+		} catch (error) {
+			res.status(401).json({ error: 'Invalid or Expired Token' });
+		}
 	}
 }

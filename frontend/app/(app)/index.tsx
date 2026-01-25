@@ -1,4 +1,4 @@
-import { Modal, Pressable, SectionList, Text, TextInput, View } from 'react-native';
+import { Button, Modal, Pressable, SectionList, Text, View } from 'react-native';
 import { storage } from '@/services/storage';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,14 +7,19 @@ import { FONT_SIZES } from '@/constants/Sizes';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { CardSet } from '@/types';
-import { SetService } from '@/services/SetService';
+import { fetcher } from '@/services/fetcher';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { FONTS } from '@/constants/Fonts';
-import { SetModal } from '@/components/SetModal';
 
 async function fetchItems(): Promise<CardSet[]> {
 	try {
-		return await SetService.getAll();
+		const response = await fetcher('/sets');
+
+		if (response.status !== 200) {
+			console.log('Can\'t register');
+			return [];
+		}
+
+		return await response.json();
 	} catch (e) {
 		console.error(e);
 		return [];
@@ -52,8 +57,9 @@ function groupByDate(items: CardSet[]) {
 			),
 		}));
 }
+
 export default function Index() {
-	const [isModalVisible, setModalVisible] = useState(false);
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const [items, setItems] = useState<CardSet[]>([]);
 	const insets = useSafeAreaInsets();
@@ -69,43 +75,21 @@ export default function Index() {
 		}).catch(console.error);
 	}, []);
 
-	const handleCreateSuccess = async (result: any) => {
-		try {
-			const sets = await SetService.getAll();
-			setItems(sets);
-			if (result && result.insertedId) {
-				const newItem = sets.find(s => s._id === result.insertedId);
-				if (newItem) {
-					router.push({
-						pathname: '/cardset/[id]',
-						params: {
-							id: result.insertedId,
-							data: JSON.stringify(newItem),
-						},
-					});
-				} else {
-                    // Fallback if not found locally yet, although getAll should have it.
-                    // Or just push without data, let [id] fetch it.
-					router.push({
-						pathname: '/cardset/[id]',
-						params: { id: result.insertedId }
-					});
-                }
-			}
-		} catch (e) {
-			console.error(e);
-		}
-	};
-
 	const sections = groupByDate(items);
 
 	return (
 		<View style={{ flex: 1, paddingTop: insets.top, backgroundColor: Colors.secondary }}>
-			<SetModal
-				visible={isModalVisible}
-				onClose={() => setModalVisible(false)}
-				onSuccess={handleCreateSuccess}
-			/>
+			<Modal
+				animationType="slide"
+				transparent={true}
+				visible={modalVisible}
+				onRequestClose={() => setModalVisible(false)}
+			>
+				<View style={{backgroundColor: 'green'}}>
+						<Text>Hello, WOrld!</Text>
+						<Button title="Close" onPress={() => setModalVisible(false)} />
+				</View>
+			</Modal>
 
 			<View style={{
 				paddingHorizontal: 24,
@@ -116,8 +100,7 @@ export default function Index() {
 				<Text style={{
 					fontSize: FONT_SIZES.heading,
 					color: Colors.primary,
-					fontFamily: FONTS.heading,
-				}}>Card Sets</Text>
+				}}>CardSets</Text>
 				<Pressable onPress={logout}>
 					<Ionicons
 						name="exit-outline"
@@ -135,8 +118,8 @@ export default function Index() {
 									 pathname: '/cardset/[id]',
 									 params: {
 										 id: item._id,
-										 data: JSON.stringify(item),
-									 },
+										 data: JSON.stringify(item)
+									 }
 								 } as const)}
 								 style={{
 									 borderWidth: 2,
@@ -146,8 +129,7 @@ export default function Index() {
 									 marginHorizontal: 12,
 									 marginVertical: 8,
 									 flexDirection: 'row',
-									 justifyContent: 'space-between',
-								 }}
+									 justifyContent: 'space-between' }}
 							 >
 								 <Text style={{ color: Colors.primary, fontSize: FONT_SIZES.body }}>{item.name}</Text>
 								 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -193,14 +175,12 @@ export default function Index() {
 				marginBottom: insets.bottom + 24,
 				marginRight: insets.right + 24,
 				borderColor: Colors.primary,
-				borderWidth: 2,
+				borderWidth: 4,
 				borderRadius: 24,
 				backgroundColor: Colors.secondary,
-				zIndex: 10,
-			}} onPress={() => {
-				setModalVisible(true);
-			}}>
-				<FontAwesome5 name="plus" size={FONT_SIZES.heading2} color={Colors.primary} />
+				zIndex: 10
+			}} onPress={() => {setModalVisible(true)}}>
+				<FontAwesome5 name="plus" size={FONT_SIZES.heading2} color={Colors.primary}/>
 			</Pressable>
 		</View>
 	);

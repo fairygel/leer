@@ -1,4 +1,5 @@
 import { storage } from './storage';
+import { router } from 'expo-router';
 
 const base_url = 'https://api.icry.uk/leer';
 
@@ -20,13 +21,21 @@ export const fetcher = async(
 	if (!endpoint.startsWith('/')) useSlash = '/';
 
 	try {
-		return await fetch(`${base_url}${useSlash}${endpoint}`, {
+		const response = await fetch(`${base_url}${useSlash}${endpoint}`, {
 			...options,
 			method,
 			headers,
 		});
+
+		if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+			await storage.removeToken();
+			router.replace('/(auth)/login');
+		}
+
+		return response;
 	} catch (e) {
 		console.error('api error:', e);
 		throw e;
 	}
 };
+
