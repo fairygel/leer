@@ -28,7 +28,9 @@ public class SecurityConfig {
                         .authenticationEntryPoint((exchange, _) -> {
 
                             String path = exchange.getRequest().getURI().getPath();
-                            if (path.contains("/api/v1/auth/login") || path.contains("/api/v1/auth/register")) {
+                            if (path.startsWith("/actuator/health")
+                                    || path.contains("/api/v1/auth/login")
+                                    || path.contains("/api/v1/auth/register")) {
                                 return Mono.empty();
                             }
 
@@ -38,7 +40,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                        .pathMatchers("/actuator/health", "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
                         .anyExchange().authenticated()
                 )
 

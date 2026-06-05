@@ -28,7 +28,9 @@ public class JwtGatewayFilter implements WebFilter {
     public @NonNull Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
 
-        if (path.contains("/api/v1/auth/login") || path.contains("/api/v1/auth/register")) {
+        if (path.startsWith("/actuator/health")
+                || path.contains("/api/v1/auth/login")
+                || path.contains("/api/v1/auth/register")) {
             return chain.filter(exchange);
         }
 

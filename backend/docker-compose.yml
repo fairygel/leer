@@ -1,18 +1,120 @@
 services:
+  # === POSTGRES ===
+
   auth-postgres:
     image: postgres:17.10-alpine
-    ports:
-      - "5432:5432"
+    container_name: auth-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: auth
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - auth-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   deck-postgres:
     image: postgres:17.10-alpine
-    ports:
-      - "5433:5432"
+    container_name: deck-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: deck
+    volumes:
+      - postgres-deck-data:/var/lib/postgresql/data
+    networks:
+      - deck-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d deck"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # === SERVICES ===
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/auth
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - gateway-auth
+      - auth-db
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  deck-service:
+    build: ./deck-service
+    container_name: deck-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://deck-postgres:5432/deck
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - gateway-deck
+      - deck-db
+    depends_on:
+      deck-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8080
+      DECK_SERVICE_URL: http://deck-service:8080
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - gateway-auth
+      - gateway-deck
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      deck-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  postgres-auth-data:
+  postgres-deck-data:
+
+networks:
+  gateway-auth:
+    driver: bridge
+    internal: true
+  gateway-deck:
+    driver: bridge
+    internal: true
+  auth-db:
+    driver: bridge
+    internal: true
+  deck-db:
+    driver: bridge
+    internal: true
