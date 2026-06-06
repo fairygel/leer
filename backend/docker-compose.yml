@@ -5,15 +5,15 @@ services:
     image: postgres:17.10-alpine
     container_name: auth-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${AUTH_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
       POSTGRES_DB: auth
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
     networks:
       - auth-db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d auth"]
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_POSTGRES_USER} -d auth"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,15 +22,15 @@ services:
     image: postgres:17.10-alpine
     container_name: deck-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DECK_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${DECK_POSTGRES_PASSWORD}
       POSTGRES_DB: deck
     volumes:
       - postgres-deck-data:/var/lib/postgresql/data
     networks:
       - deck-db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d deck"]
+      test: ["CMD-SHELL", "pg_isready -U ${DECK_POSTGRES_USER} -d deck"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -42,8 +42,9 @@ services:
     container_name: auth-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/auth
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: ${AUTH_POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_TOKEN_SECRET}
     networks:
       - gateway-auth
       - auth-db
@@ -51,7 +52,7 @@ services:
       auth-postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -62,8 +63,8 @@ services:
     container_name: deck-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://deck-postgres:5432/deck
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: ${DECK_POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DECK_POSTGRES_PASSWORD}
     networks:
       - gateway-deck
       - deck-db
@@ -71,7 +72,7 @@ services:
       deck-postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -83,6 +84,7 @@ services:
     environment:
       AUTH_SERVICE_URL: http://auth-service:8080
       DECK_SERVICE_URL: http://deck-service:8080
+      JWT_SECRET: ${JWT_TOKEN_SECRET}
       SERVER_PORT: 8080
     ports:
       - "8080:8080"
@@ -108,10 +110,8 @@ volumes:
 networks:
   gateway-auth:
     driver: bridge
-    internal: true
   gateway-deck:
     driver: bridge
-    internal: true
   auth-db:
     driver: bridge
     internal: true

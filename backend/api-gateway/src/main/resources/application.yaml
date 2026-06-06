@@ -1,6 +1,9 @@
 server:
   port: 8080
 
+jwt:
+  secret: super_secret_key_for_flashcards_app_backend_2026
+
 spring:
   application:
     name: api-gateway
