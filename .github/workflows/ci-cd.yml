@@ -35,10 +35,10 @@ jobs:
       #   run: ./backend/run-tests.sh
 
       - name: Build Docker images
-        run: docker compose build
+        run: cd backend && docker compose build
 
       - name: Start all services
-        run: docker compose up -d
+        run: cd backend && docker compose up -d
 
       - name: Wait for services to be healthy
         timeout-minutes: 5
@@ -46,7 +46,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker compose down -v
+        run: cd backend && docker compose down -v
 
   cd:
     needs: ci
@@ -59,13 +59,13 @@ jobs:
 
       - name: Deploy to server
         run: |
+          cd backend
+          
           docker compose down
-          
           docker compose build
-          
           docker compose up -d
           
           sleep 30
-          ./scripts/wait-for-healthy.sh
+          ./backend/wait-for-healthy.sh
           
           docker system prune -f
