@@ -39,7 +39,7 @@ jobs:
 
       - name: Wait for services to be healthy
         timeout-minutes: 5
-        run: cd backend && ./backend/check_health.sh
+        run: cd backend && ./check_health.sh
 
       - name: Cleanup
         if: always()
