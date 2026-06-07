@@ -34,11 +34,8 @@ jobs:
       # - name: Run all tests
       #   run: ./backend/run-tests.sh
 
-      - name: Build Docker images
-        run: cd backend && docker compose build
-
-      - name: Start all services
-        run: cd backend && docker compose up -d
+      - name: Build & Start all services
+        run: cd backend && docker compose --env-file .env.example up --build -d
 
       - name: Wait for services to be healthy
         timeout-minutes: 5
@@ -60,7 +57,7 @@ jobs:
       - name: Deploy to server
         run: |
           cd backend
-          
+
           docker compose down
           docker compose build
           docker compose up -d
