@@ -29,5 +29,5 @@ for i in $(seq 1 $MAX_ATTEMPTS); do
 done
 
 echo "Timeout: some containers are not healthy after $MAX_ATTEMPTS attempts"
-docker-compose logs
+docker compose logs
 exit 1
