@@ -1,7 +1,6 @@
 package me.fairygel.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import me.fairygel.dto.card.CardResponseDTO;
 import me.fairygel.dto.card.CreateCardRequestDTO;
