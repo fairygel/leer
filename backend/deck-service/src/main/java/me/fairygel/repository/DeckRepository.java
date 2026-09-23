@@ -10,7 +10,11 @@ import java.util.UUID;
 
 @Repository
 public interface DeckRepository extends JpaRepository<Deck, UUID> {
-    Optional<Deck> findByIdAndUserId(UUID id, UUID userId);
+    Optional<Deck> findByUserIdAndId(UUID userId, UUID id);
+
     List<Deck> findAllByUserId(UUID userId);
-    long deleteByIdAndUserId(UUID id, UUID userId);
+
+    long deleteByUserIdAndId(UUID userId, UUID id);
+
+    boolean existsByUserIdAndId(UUID userId, UUID id);
 }

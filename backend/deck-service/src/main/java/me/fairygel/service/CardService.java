@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import me.fairygel.dto.card.CardResponseDTO;
 import me.fairygel.dto.card.CreateCardRequestDTO;
 import me.fairygel.dto.card.UpdateCardRequestDTO;
+import me.fairygel.dto.card.UpdateCardStatusRequestDTO;
 import me.fairygel.entity.Card;
 import me.fairygel.entity.Deck;
+import me.fairygel.enums.CardStatus;
 import me.fairygel.mapper.CardMapper;
 import me.fairygel.repository.CardRepository;
 import me.fairygel.repository.DeckRepository;
@@ -24,24 +26,22 @@ public class CardService {
     private final CardMapper cardMapper;
 
     @Transactional(readOnly = true)
-    public List<CardResponseDTO> findAllByDeckIdAndUserId(UUID deckId, UUID userId) {
-        List<Card> rawCards = cardRepository.findAllByDeckIdAndDeck_UserId(deckId, userId);
+    public List<CardResponseDTO> findAllByDeckIdAndUserId(UUID userId, UUID deckId) {
+        List<Card> rawCards = cardRepository.findAllByDeck_UserIdAndDeckId(userId, deckId);
 
         return cardMapper.toResponseList(rawCards);
     }
 
     @Transactional(readOnly = true)
-    public CardResponseDTO findByIdAndUserId(UUID cardId, UUID userId) {
-        Card rawCard = cardRepository.findByIdAndDeck_UserId(cardId, userId).orElseThrow(() -> new EntityNotFoundException(
-                "Card not found with id: " + cardId
-        ));
+    public CardResponseDTO findByIdAndUserId(UUID userId, UUID cardId) {
+        Card rawCard = findCardOrThrow(userId, cardId);
 
         return cardMapper.toResponse(rawCard);
     }
 
     @Transactional
-    public void deleteByIdAndUserId(UUID cardId, UUID userId) {
-        boolean isDeleted = cardRepository.deleteByIdAndDeck_UserId(cardId, userId) > 0;
+    public void deleteByIdAndUserId(UUID userId, UUID cardId) {
+        boolean isDeleted = cardRepository.deleteByDeck_UserIdAndId(userId, cardId) > 0;
 
         if (!isDeleted) {
             throw new EntityNotFoundException("Card not found with id: " + cardId);
@@ -52,7 +52,7 @@ public class CardService {
     public CardResponseDTO create(UUID userId, CreateCardRequestDTO cardCreateDTO) {
         UUID deckId = cardCreateDTO.deckId();
 
-        Deck deck = deckRepository.findByIdAndUserId(deckId, userId)
+        Deck deck = deckRepository.findByUserIdAndId(userId, deckId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Deck not found with id: " + deckId
                 ));
@@ -67,14 +67,27 @@ public class CardService {
     }
 
     @Transactional
-    public CardResponseDTO update(UUID cardId, UUID userId, UpdateCardRequestDTO cardUpdateDTO) {
-        Card rawCard = cardRepository.findByIdAndDeck_UserId(cardId, userId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Card not found with id: " + cardId
-                ));
-
+    public CardResponseDTO update(UUID userId, UUID cardId, UpdateCardRequestDTO cardUpdateDTO) {
+        Card rawCard = findCardOrThrow(userId, cardId);
         cardMapper.update(cardUpdateDTO, rawCard);
 
         return cardMapper.toResponse(rawCard);
+    }
+
+    @Transactional
+    public CardResponseDTO setKnown(UUID userId, UUID cardId, UpdateCardStatusRequestDTO cardRequestDTO) {
+        Card rawCard = findCardOrThrow(userId, cardId);
+        CardStatus cardStatus = cardRequestDTO.isKnown() ? CardStatus.KNOWN : CardStatus.UNKNOWN;
+
+        rawCard.setStatus(cardStatus);
+
+        return cardMapper.toResponse(rawCard);
+    }
+
+    private Card findCardOrThrow(UUID userId, UUID cardId) {
+        return cardRepository.findByDeck_UserIdAndId(userId, cardId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Card not found with id: " + cardId
+                ));
     }
 }
