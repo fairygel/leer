@@ -1,9 +1,8 @@
 package me.fairygel.mapper;
 
 import java.util.List;
-import me.fairygel.dto.deck.CreateDeckRequestDTO;
-import me.fairygel.dto.deck.DeckResponseDTO;
-import me.fairygel.dto.deck.UpdateDeckRequestDTO;
+
+import me.fairygel.dto.deck.*;
 import me.fairygel.entity.Deck;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -16,6 +15,7 @@ import org.mapstruct.ReportingPolicy;
 public interface DeckMapper {
 
     DeckResponseDTO toResponse(Deck deck);
+    DeckResponseWithProgressDTO toResponseWithProgress(Deck deck, DeckLearnProgressDTO learnProgress);
 
     List<DeckResponseDTO> toResponseList(List<Deck> decks);
 

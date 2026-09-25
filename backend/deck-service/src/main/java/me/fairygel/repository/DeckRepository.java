@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface DeckRepository extends JpaRepository<Deck, UUID> {
+
     Optional<Deck> findByUserIdAndId(UUID userId, UUID id);
 
     List<Deck> findAllByUserId(UUID userId);

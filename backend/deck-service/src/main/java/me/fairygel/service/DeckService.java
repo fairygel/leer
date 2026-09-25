@@ -2,10 +2,9 @@ package me.fairygel.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import me.fairygel.dto.card.CardResponseDTO;
-import me.fairygel.dto.deck.CreateDeckRequestDTO;
-import me.fairygel.dto.deck.DeckResponseDTO;
-import me.fairygel.dto.deck.UpdateDeckRequestDTO;
+import me.fairygel.dto.deck.*;
 import me.fairygel.entity.Card;
 import me.fairygel.entity.Deck;
 import me.fairygel.enums.CardStatus;
@@ -17,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,11 +48,30 @@ public class DeckService {
 
 
     @Transactional(readOnly = true)
-    public DeckResponseDTO findByIdAndUserId(UUID userId, UUID deckId) {
+    public DeckResponseWithProgressDTO findByIdAndUserId(UUID userId, UUID deckId) {
         Deck rawDeck = deckRepository.findByUserIdAndId(userId, deckId)
                 .orElseThrow(() -> new EntityNotFoundException("Deck not found with id: " + deckId));
 
-        return deckMapper.toResponse(rawDeck);
+        val deckCardStats = cardRepository.countByDeckId(deckId, userId)
+                .stream()
+                .collect(Collectors.toMap(
+                        CardRepository.CardStatusCount::getStatus,
+                        CardRepository.CardStatusCount::getCnt
+                ));
+
+        val deckLearnProgressDTO = toLearnProgressDTO(deckCardStats);
+
+        return deckMapper.toResponseWithProgress(rawDeck, deckLearnProgressDTO);
+    }
+
+    private DeckLearnProgressDTO toLearnProgressDTO(
+            Map<CardStatus, Long> deckCardStats
+    ) {
+        return new DeckLearnProgressDTO(
+                deckCardStats.getOrDefault(CardStatus.NEW, 0L),
+                deckCardStats.getOrDefault(CardStatus.UNKNOWN, 0L),
+                deckCardStats.getOrDefault(CardStatus.KNOWN, 0L)
+        );
     }
 
     @Transactional

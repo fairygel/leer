@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.fairygel.dto.card.CardResponseDTO;
 import me.fairygel.dto.deck.CreateDeckRequestDTO;
 import me.fairygel.dto.deck.DeckResponseDTO;
+import me.fairygel.dto.deck.DeckResponseWithProgressDTO;
 import me.fairygel.dto.deck.UpdateDeckRequestDTO;
 import me.fairygel.service.DeckService;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class DeckController {
     }
 
     @GetMapping("/{deckId}")
-    public DeckResponseDTO getDeck(
+    public DeckResponseWithProgressDTO getDeck(
             @RequestHeader("X-User-Id") UUID userId,
             @PathVariable UUID deckId
     ) {
