@@ -1,7 +1,9 @@
 package me.fairygel.dto.deck;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import me.fairygel.enums.Language;
 
 public record CreateDeckRequestDTO(
         @NotBlank(message = "Name cannot be blank")
@@ -9,5 +11,11 @@ public record CreateDeckRequestDTO(
         String name,
 
         @Size(max = 1000, message = "Description length must not exceed 1000 characters")
-        String description
+        String description,
+
+        @NotNull(message = "Source language is required")
+        Language sourceLang,
+
+        @NotNull(message = "Target language is required")
+        Language targetLang
 ) {}

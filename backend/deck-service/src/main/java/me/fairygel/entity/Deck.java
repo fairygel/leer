@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import me.fairygel.enums.Language;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -27,6 +28,14 @@ public class Deck {
 
     @Column(name = "description")
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_lang", length = 10)
+    private Language sourceLang;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_lang", length = 10)
+    private Language targetLang;
 
     @NotNull
     @Column(name = "user_id", nullable = false)

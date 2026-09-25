@@ -10,6 +10,7 @@ public record CardResponseDTO(
         UUID deckId,
         String question,
         String answer,
+        String note,
         CardStatus status,
         OffsetDateTime lastViewedAt,
         OffsetDateTime updatedAt,

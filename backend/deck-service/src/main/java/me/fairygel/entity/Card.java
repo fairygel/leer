@@ -36,6 +36,9 @@ public class Card {
     @Column(name = "answer", nullable = false)
     private String answer;
 
+    @Column(name = "note", columnDefinition = "text")
+    private String note;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)

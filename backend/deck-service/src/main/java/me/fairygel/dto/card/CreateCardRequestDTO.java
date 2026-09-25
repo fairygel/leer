@@ -16,5 +16,8 @@ public record CreateCardRequestDTO(
 
         @NotBlank(message = "Answer cannot be blank")
         @Size(max = 255, message = "Answer length must not exceed 255 characters")
-        String answer
+        String answer,
+
+        @Size(max = 1000, message = "Note length must not exceed 1000 characters")
+        String note
 ) {}
