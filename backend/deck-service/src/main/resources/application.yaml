@@ -10,6 +10,10 @@ spring:
     url: jdbc:postgresql://localhost:5433/deck
     username: postgres
     password: postgres
+  web:
+    error:
+      include-stacktrace: never
+      include-message: always
 
 management:
   endpoints:
