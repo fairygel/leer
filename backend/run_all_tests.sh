@@ -1,4 +1,5 @@
 #!/bin/bash
+# Use this script only for ci/cd.
 
 set -e
 

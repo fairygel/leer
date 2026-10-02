@@ -15,7 +15,7 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    private final long EXPIRATION_TIME = TimeUnit.DAYS.toMillis(1);
+    private static final long EXPIRATION_TIME = TimeUnit.DAYS.toMillis(1);
 
     public String generateToken(UUID userId) {
         return JWT.create()

@@ -1,0 +1,2 @@
+ALTER TABLE decks ADD COLUMN source_lang VARCHAR(10);
+ALTER TABLE decks ADD COLUMN target_lang VARCHAR(10);
