@@ -1,6 +1,6 @@
 package me.fairygel.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import me.fairygel.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class AuthFlowE2ETest {
         users.deleteAll();
     }
 
-    private String body(String email, String password) throws Exception {
+    private String body(String email, String password) {
         return objectMapper.writeValueAsString(
                 java.util.Map.of("email", email, "password", password));
     }

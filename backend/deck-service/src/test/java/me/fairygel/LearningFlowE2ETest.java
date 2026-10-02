@@ -1,7 +1,7 @@
 package me.fairygel;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import me.fairygel.repository.CardRepository;
 import me.fairygel.repository.DeckRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +71,7 @@ class LearningFlowE2ETest {
                 .andExpect(status().isCreated())
                 .andReturn();
         JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
-        return UUID.fromString(body.get("id").asText());
+        return UUID.fromString(body.get("id").asString());
     }
 
     private UUID createCard(UUID userId, UUID deckId, String question) throws Exception {
@@ -84,7 +84,7 @@ class LearningFlowE2ETest {
                 .andExpect(status().isCreated())
                 .andReturn();
         JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
-        return UUID.fromString(body.get("id").asText());
+        return UUID.fromString(body.get("id").asString());
     }
 
     private void setKnown(UUID userId, UUID cardId, boolean known) throws Exception {
@@ -116,19 +116,19 @@ class LearningFlowE2ETest {
         setKnown(userId, card1, true);
         JsonNode remaining = getLearning(userId, deckId);
         assertThat(remaining).hasSize(1);
-        assertThat(remaining.get(0).get("id").asText()).isEqualTo(card2.toString());
+        assertThat(remaining.get(0).get("id").asString()).isEqualTo(card2.toString());
 
         setKnown(userId, card2, false);
         JsonNode fallback = getLearning(userId, deckId);
         assertThat(fallback).hasSize(1);
-        assertThat(fallback.get(0).get("status").asText()).isEqualTo("UNKNOWN");
+        assertThat(fallback.get(0).get("status").asString()).isEqualTo("UNKNOWN");
 
         mvc.perform(post("/api/v1/decks/{id}/reset-learning", deckId)
                         .header("X-User-Id", userHeader(userId)))
                 .andExpect(status().isNoContent());
         JsonNode afterReset = getLearning(userId, deckId);
         assertThat(afterReset).hasSize(2);
-        assertThat(afterReset.get(0).get("status").asText()).isEqualTo("NEW");
+        assertThat(afterReset.get(0).get("status").asString()).isEqualTo("NEW");
     }
 
     @Test
@@ -155,7 +155,7 @@ class LearningFlowE2ETest {
                         .header("X-User-Id", userHeader(userId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name":""}
+                                {"name":"","sourceLang":"en","targetLang":"ru"}
                                 """))
                 .andExpect(status().isBadRequest());
     }
