@@ -19,8 +19,7 @@ repositories {
 }
 
 dependencies {
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    implementation("com.auth0:java-jwt:4.4.0")
+    implementation(libs.java.jwt)
 
     // spring
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -29,25 +28,29 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.flywaydb:flyway-database-postgresql")
 
     // lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    // database
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
     runtimeOnly("org.postgresql:postgresql")
-    implementation("org.springframework.boot:spring-boot-starter-flyway")
-    implementation("org.flywaydb:flyway-database-postgresql")
 
     // test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-resttestclient")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-oauth2-client-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-
 }
 
 tasks.withType<Test> {
