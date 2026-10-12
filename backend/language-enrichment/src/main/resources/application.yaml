@@ -1,3 +1,31 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: language-enrichment
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5434/language-enrichment
+    username: postgres
+    password: postgres
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  web:
+    error:
+      include-stacktrace: never
+      include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

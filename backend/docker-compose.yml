@@ -35,6 +35,39 @@ services:
       timeout: 5s
       retries: 5
 
+  language-enrichment-postgres:
+    image: postgres:17.10-alpine
+    container_name: language-enrichment-postgres
+    environment:
+      POSTGRES_USER: ${LANGUAGE_ENRICHMENT_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LANGUAGE_ENRICHMENT_POSTGRES_PASSWORD}
+      POSTGRES_DB: language-enrichment
+    volumes:
+      - postgres-language-enrichment-data:/var/lib/postgresql/data
+    networks:
+      - language-enrichment-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LANGUAGE_ENRICHMENT_POSTGRES_USER} -d language-enrichment"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # === REDIS ===
+
+  language-enrichment-redis:
+    image: redis:8-alpine
+    container_name: language-enrichment-redis
+    command: redis-server --requirepass ${LANGUAGE_ENRICHMENT_REDIS_PASSWORD}
+    volumes:
+      - redis-language-enrichment-data:/data
+    networks:
+      - language-enrichment-db
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${LANGUAGE_ENRICHMENT_REDIS_PASSWORD} ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # === SERVICES ===
 
   auth-service:
@@ -78,12 +111,38 @@ services:
       retries: 5
       start_period: 15s
 
+  language-enrichment:
+    build: ./language-enrichment
+    container_name: language-enrichment
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://language-enrichment-postgres:5432/language-enrichment
+      SPRING_DATASOURCE_USERNAME: ${LANGUAGE_ENRICHMENT_POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${LANGUAGE_ENRICHMENT_POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: language-enrichment-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${LANGUAGE_ENRICHMENT_REDIS_PASSWORD}
+    networks:
+      - gateway-language-enrichment
+      - language-enrichment-db
+    depends_on:
+      language-enrichment-postgres:
+        condition: service_healthy
+      language-enrichment-redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
     environment:
       AUTH_SERVICE_URL: http://auth-service:8080
       DECK_SERVICE_URL: http://deck-service:8080
+      LANGUAGE_ENRICHMENT_SERVICE_URL: http://language-enrichment:8080
       JWT_SECRET: ${JWT_TOKEN_SECRET}
       SERVER_PORT: 8080
     ports:
@@ -91,10 +150,13 @@ services:
     networks:
       - gateway-auth
       - gateway-deck
+      - gateway-language-enrichment
     depends_on:
       auth-service:
         condition: service_healthy
       deck-service:
+        condition: service_healthy
+      language-enrichment:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
@@ -106,6 +168,8 @@ services:
 volumes:
   postgres-auth-data:
   postgres-deck-data:
+  postgres-language-enrichment-data:
+  redis-language-enrichment-data:
 
 networks:
   gateway-auth:
@@ -116,5 +180,10 @@ networks:
     driver: bridge
     internal: true
   deck-db:
+    driver: bridge
+    internal: true
+  gateway-language-enrichment:
+    driver: bridge
+  language-enrichment-db:
     driver: bridge
     internal: true

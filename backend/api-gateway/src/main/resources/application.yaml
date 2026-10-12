@@ -23,6 +23,11 @@ spring:
               predicates:
                 - Path=/api/v1/cards/**, /api/v1/decks/**
 
+            - id: language-enrichment
+              uri: http://language-enrichment:8080
+              predicates:
+                - Path=/api/v1/language/**
+
 management:
   endpoints:
     web:

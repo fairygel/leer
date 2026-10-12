@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX ON "words" ("text", "language");

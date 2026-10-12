@@ -18,4 +18,9 @@ cd api-gateway
 ./gradlew test --no-daemon
 cd ..
 
+echo "=== Running language-enrichment tests ==="
+cd language-enrichment
+./gradlew test --no-daemon
+cd ..
+
 echo "=== All tests passed ==="

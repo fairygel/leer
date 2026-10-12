@@ -1,0 +1,4 @@
+ALTER TABLE "definitions"
+    ADD FOREIGN KEY ("word_id") REFERENCES "words" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "translations"
+    ADD FOREIGN KEY ("word_id") REFERENCES "words" ("id") DEFERRABLE INITIALLY IMMEDIATE;
